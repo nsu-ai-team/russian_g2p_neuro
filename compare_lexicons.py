@@ -58,6 +58,13 @@ def find_best_pair(left_transcriptions, right_transcriptions):
 def compare_lexicons(true_lexicon_name, predicted_lexicon_name):
     true_lexicon = load_lexicon(true_lexicon_name)
     predicted_lexicon = load_lexicon(predicted_lexicon_name)
+    true_words_set = set(true_lexicon.keys())
+    predicted_words_set = set(predicted_lexicon.keys())
+    if true_words_set != predicted_words_set:
+        for cur_word in (predicted_words_set - true_words_set):
+            true_lexicon[cur_word]= []
+        for cur_word in (true_words_set - predicted_words_set):
+            predicted_lexicon[cur_word] = []
     assert set(true_lexicon.keys()) == set(predicted_lexicon.keys()), \
         'File "{0}" does not correspond to file "{1}": word lists are not equal!'.format(true_lexicon_name,
                                                                                          predicted_lexicon_name)
@@ -68,12 +75,22 @@ def compare_lexicons(true_lexicon_name, predicted_lexicon_name):
     n_all = 0
     word_errors = 0
     for cur_word in all_words:
-        best_pair, ops = find_best_pair(true_lexicon[cur_word], predicted_lexicon[cur_word])
-        n_all += len(best_pair[0].split())
-        n_deletions += ops['delete']
-        n_insertions += ops['insert']
-        n_substitutions += ops['replace']
-        if (ops['delete'] > 0) or (ops['insert'] > 0) or (ops['replace'] > 0):
+        if (len(true_lexicon[cur_word]) == 0) and (len(predicted_lexicon[cur_word]) == 0):
+            continue
+        if (len(true_lexicon[cur_word]) > 0) and (len(predicted_lexicon[cur_word]) > 0):
+            best_pair, ops = find_best_pair(true_lexicon[cur_word], predicted_lexicon[cur_word])
+            n_all += len(best_pair[0].split())
+            n_deletions += ops['delete']
+            n_insertions += ops['insert']
+            n_substitutions += ops['replace']
+            if (ops['delete'] > 0) or (ops['insert'] > 0) or (ops['replace'] > 0):
+                word_errors += 1
+        else:
+            if len(true_lexicon[cur_word]) > 0:
+                n_all += len(true_lexicon[cur_word][0].split())
+                n_deletions += len(true_lexicon[cur_word][0].split())
+            else:
+                n_insertions += len(predicted_lexicon[cur_word][0].split())
             word_errors += 1
     return word_errors / float(len(all_words)), (n_substitutions + n_deletions + n_insertions) / float(n_all)
 

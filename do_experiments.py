@@ -58,6 +58,8 @@ def main():
     parser.add_argument('--cv', dest='cv', type=int, required=False, default=10,
                         help='Fold number for crossvalidation.')
     parser.add_argument('--ngram', dest='ngram', type=int, required=False, default=5, help='Maximal N-gram size.')
+    parser.add_argument('-p', '--pmass', dest='pmass', type=float, required=False, default=0.85,
+                        help='% of total probability mass constraint for transcriptions generating.')
     parser.add_argument('--seed', dest='seed', type=int, required=False, default=0, help='Random seed.')
     args = parser.parse_args()
 
@@ -72,6 +74,8 @@ def main():
     assert cv > 1, u'Fold number for crossvalidation is too small!'
     ngram = args.ngram
     assert ngram > 1, u'Maximal N-gram size is too small!'
+    pmass = args.pmass
+    assert (pmass > 0.0) and (pmass <= 1.0), u'% of total probability mass constraint is wrong!'
 
     model_dir = os.path.join(os.path.dirname(__file__), 'model')
     random.seed(args.seed)
@@ -97,8 +101,8 @@ def main():
             cmd = u'phonetisaurus-train --lexicon "{0}" --dir_prefix "{1}" --model_prefix russian_g2p ' \
                   u'--ngram_order {2} --seq2_del'.format(tmp_file_for_training, model_dir, ngram)
             os.system(cmd)
-            cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" > "{2}"'.format(
-                os.path.join(model_dir, 'russian_g2p.fst'), tmp_file_for_wordlist, tmp_file_for_result
+            cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" -p {2} -a > "{3}"'.format(
+                os.path.join(model_dir, 'russian_g2p.fst'), tmp_file_for_wordlist, pmass, tmp_file_for_result
             )
             os.system(cmd)
             word_error_rate, phone_error_rate = compare_lexicons(tmp_file_for_testing, tmp_file_for_result)
@@ -127,8 +131,8 @@ def main():
         cmd = u'phonetisaurus-train --lexicon "{0}" --dir_prefix "{1}" --model_prefix russian_g2p ' \
               u'--ngram_order {2} --seq2_del'.format(training_vocabulary_name, model_dir, ngram)
         os.system(cmd)
-        cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" > "{2}"'.format(
-            os.path.join(model_dir, 'russian_g2p.fst'), src_wordlist_name, tmp_file_for_result
+        cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" -p {2} -a > "{3}"'.format(
+            os.path.join(model_dir, 'russian_g2p.fst'), src_wordlist_name, pmass, tmp_file_for_result
         )
         os.system(cmd)
         predicted_phonetic_dictionary = load_lexicon(tmp_file_for_result)
