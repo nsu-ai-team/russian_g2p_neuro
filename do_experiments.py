@@ -122,38 +122,52 @@ def main():
     WERs = np.array(WERs, dtype=np.float64)
     PERs = np.array(PERs, dtype=np.float64)
     print(u'')
-    print(u'Word error rate is {0:.2%} ± {1:.2%}'.format(WERs.mean(), WERs.std()))
-    print(u'Phone error rate is {0:.2%} ± {1:.2%}'.format(PERs.mean(), PERs.std()))
+    print(u'Word error rate is {0:.2%} +- {1:.2%}'.format(WERs.mean(), WERs.std()))
+    print(u'Phone error rate is {0:.2%} +- {1:.2%}'.format(PERs.mean(), PERs.std()))
+    print(u'')
+    print(u'Crossvalidation is finised...')
 
-    base_phonetic_dictionary = load_lexicon(training_vocabulary_name)
+    tmp_file_for_training = create_tmp_file_name()
     tmp_file_for_result = create_tmp_file_name()
     try:
+        with codecs.open(tmp_file_for_training, mode='w', encoding='utf-8', errors='ignore') as fp:
+            for cur_word in sorted(list(words_and_transcriptions.keys())):
+                for cur_transcription in words_and_transcriptions[cur_word]:
+                    fp.write(u'{0}\t{1}\n'.format(cur_word, cur_transcription))
+        print(u'')
+        print(u'Final training is started...')
         cmd = u'phonetisaurus-train --lexicon "{0}" --dir_prefix "{1}" --model_prefix russian_g2p ' \
-              u'--ngram_order {2} --seq2_del'.format(training_vocabulary_name, model_dir, ngram)
+              u'--ngram_order {2} --seq2_del'.format(tmp_file_for_training, model_dir, ngram)
         os.system(cmd)
+        print(u'')
+        print(u'Final training is finished...')
+        print(u'')
+        print(u'Final recognition of transcriptions for words is started...')
         cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" -p {2} -a > "{3}"'.format(
             os.path.join(model_dir, 'russian_g2p.fst'), src_wordlist_name, pmass, tmp_file_for_result
         )
         os.system(cmd)
+        print(u'')
+        print(u'Final recognition of transcriptions for words is finished...')
         predicted_phonetic_dictionary = load_lexicon(tmp_file_for_result)
     finally:
+        if os.path.isfile(tmp_file_for_training):
+            os.remove(tmp_file_for_training)
         if os.path.isfile(tmp_file_for_result):
             os.remove(tmp_file_for_result)
-        for cur in filter(lambda it: it.startswith(u'russian_g2p'), os.listdir(model_dir)):
-            os.remove(os.path.join(model_dir, cur))
 
     for cur_word in predicted_phonetic_dictionary:
-        if cur_word in base_phonetic_dictionary:
+        if cur_word in words_and_transcriptions:
             for cur_transcription in predicted_phonetic_dictionary[cur_word]:
-                if cur_transcription not in base_phonetic_dictionary[cur_word]:
-                    base_phonetic_dictionary[cur_word].append(cur_transcription)
+                if cur_transcription not in words_and_transcriptions[cur_word]:
+                    words_and_transcriptions[cur_word].append(cur_transcription)
         else:
-            base_phonetic_dictionary[cur_word] = predicted_phonetic_dictionary[cur_word]
+            words_and_transcriptions[cur_word] = predicted_phonetic_dictionary[cur_word]
     with codecs.open(dst_vocabulary_name, mode='w', encoding='utf-8', errors='ignore') as fp:
-        for cur_word in sorted(list(base_phonetic_dictionary.keys())):
-            fp.write(u'{0} {1}\n'.format(cur_word, base_phonetic_dictionary[cur_word][0]))
-            for ind in range(1, len(base_phonetic_dictionary[cur_word])):
-                fp.write(u'{0}({1}) {2}\n'.format(cur_word, ind + 1, base_phonetic_dictionary[cur_word][ind]))
+        for cur_word in sorted(list(words_and_transcriptions.keys())):
+            fp.write(u'{0} {1}\n'.format(cur_word, words_and_transcriptions[cur_word][0]))
+            for ind in range(1, len(words_and_transcriptions[cur_word])):
+                fp.write(u'{0}({1}) {2}\n'.format(cur_word, ind + 1, words_and_transcriptions[cur_word][ind]))
 
 
 if __name__ == '__main__':

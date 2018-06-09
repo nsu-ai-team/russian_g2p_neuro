@@ -66,8 +66,8 @@ def compare_lexicons(true_lexicon_name, predicted_lexicon_name):
         for cur_word in (true_words_set - predicted_words_set):
             predicted_lexicon[cur_word] = []
     assert set(true_lexicon.keys()) == set(predicted_lexicon.keys()), \
-        'File "{0}" does not correspond to file "{1}": word lists are not equal!'.format(true_lexicon_name,
-                                                                                         predicted_lexicon_name)
+        u'File "{0}" does not correspond to file "{1}": word lists are not equal!'.format(true_lexicon_name,
+                                                                                          predicted_lexicon_name)
     all_words = sorted(list(true_lexicon))
     n_substitutions = 0
     n_deletions = 0
