@@ -57,7 +57,7 @@ def main():
                         help='Destination file into which the creating phonetic transcriptions shall be written.')
     parser.add_argument('--cv', dest='cv', type=int, required=False, default=10,
                         help='Fold number for crossvalidation.')
-    parser.add_argument('--ngram', dest='ngram', type=int, required=False, default=5, help='Maximal N-gram size.')
+    parser.add_argument('-n', '--ngram', dest='ngram', type=int, required=False, default=5, help='Maximal N-gram size.')
     parser.add_argument('-p', '--pmass', dest='pmass', type=float, required=False, default=0.85,
                         help='% of total probability mass constraint for transcriptions generating.')
     parser.add_argument('--seed', dest='seed', type=int, required=False, default=0, help='Random seed.')
