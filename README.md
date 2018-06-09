@@ -47,7 +47,7 @@ For this you need to specify:
 - `--cv`, a folds quantity for crossvalidation (by default 10 is used);
 - `--seed`, a random seed (by default 0 is used).
 
-The source word list is a simple text file. Each line of this file contains single word, for which pronouncing will be generated.
+The source word list is a simple text file. Each line of this file contains single word, for which pronouncing will be generated. Any word can consist only of alphabetical characters or some punctuation symbols, such as dash and single quote. No other characters are allowed (there shall not be digits, spaces etc.).
 
 The existing pronouncing dictionary for training is a text file also, but it has a more complicated structure. Each line contains single word and its phonetical transcription, at that word and all phonemes are separated each other by spaces. For example, you can see the `data/ru_training.dic` (our pronouncing dictionary for Russian) or the CMUDict https://github.com/cmusphinx/cmudict/blob/master/cmudict.dict (the Carnegie Mellon Pronouncing Dictionary for English).
 
