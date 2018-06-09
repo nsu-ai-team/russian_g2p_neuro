@@ -5,18 +5,18 @@ Experiments with grapheme2phoneme for Russian based on the artificial neural net
 
 ### Prerequisites
 
-You should have a Python installed on your machine (we tested with Python 2.7 and Python 3.6). Also, you need the **Phonetisaurus GRP** https://github.com/AdolfVonKleist/Phonetisaurus and some Pyhton libraries listed in requirements.txt. If you do not have these Python libraries, run in Terminal
+You should have a Python installed on your machine (we tested with Python 2.7 and Python 3.6). Also, you need the **Phonetisaurus G2P** https://github.com/AdolfVonKleist/Phonetisaurus and some Pyhton libraries listed in requirements.txt. If you do not have these Python libraries, run in Terminal
 
 ```
 pip install -r requirements.txt
 ```
 
-As for the **Phonetisaurus GRP**, for its installation you have to follow instructions from https://github.com/AdolfVonKleist/Phonetisaurus/blob/master/README.md
+As for the **Phonetisaurus G2P**, for its installation you have to follow instructions from https://github.com/AdolfVonKleist/Phonetisaurus/blob/master/README.md
 
 ### Installing and Usage
 
 #### Linux / MacOS
-To install this project on your local machine, you should run the following commands in Terminal:
+To install this project on your local machine, you have to run the following commands in Terminal:
 
 ```
 cd YOUR_FOLDER
@@ -29,7 +29,7 @@ This project contains three scripts:
 
 - do_experiments.py
 - compare_lexicons.py
-- prepared_dict.py
+- prepare_dict.py
 
 Main script is `do_experiments.py`. Using this script you can:
 
