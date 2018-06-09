@@ -5,13 +5,13 @@ Experiments with grapheme2phoneme for Russian based on the artificial neural net
 
 ### Prerequisites
 
-You should have a Python installed on your machine (we tested with Python 2.7 and Python 3.6). Also, you need the `Phonetisaurus GRP` https://github.com/AdolfVonKleist/Phonetisaurus and some Pyhton libraries listed in requirements.txt. If you do not have these Python libraries, run in Terminal
+You should have a Python installed on your machine (we tested with Python 2.7 and Python 3.6). Also, you need the **Phonetisaurus GRP** https://github.com/AdolfVonKleist/Phonetisaurus and some Pyhton libraries listed in requirements.txt. If you do not have these Python libraries, run in Terminal
 
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-As for the `Phonetisaurus GRP`, for its installation you have to follow instructions from https://github.com/AdolfVonKleist/Phonetisaurus/blob/master/README.md
+As for the **Phonetisaurus GRP**, for its installation you have to follow instructions from https://github.com/AdolfVonKleist/Phonetisaurus/blob/master/README.md
 
 ### Installing and Usage
 
