@@ -55,8 +55,11 @@ def main():
                         help='File with source vocabulary for training.')
     parser.add_argument('-d', '--dst', dest='destination_lexicon', type=str, required=True,
                         help='Destination file into which the creating phonetic transcriptions shall be written.')
-    parser.add_argument('--cv', dest='cv', type=int, required=False, default=10,
-                        help='Fold number for crossvalidation.')
+    parser.add_argument('--cv', dest='cv', type=int, required=False, default=None,
+                        help='Fold number for crossvalidation (if it is not '
+                             'specified, then cross-validation will not be '
+                             'executed, and final training will be started '
+                             'right away).')
     parser.add_argument('-n', '--ngram', dest='ngram', type=int, required=False, default=5, help='Maximal N-gram size.')
     parser.add_argument('-p', '--pmass', dest='pmass', type=float, required=False, default=0.85,
                         help='% of total probability mass constraint for transcriptions generating.')
@@ -71,7 +74,8 @@ def main():
     training_vocabulary_name = os.path.normpath(args.lexicon_for_training)
     assert os.path.isfile(training_vocabulary_name), u'File "{0}" does not exist!'.format(training_vocabulary_name)
     cv = args.cv
-    assert cv > 1, u'Fold number for crossvalidation is too small!'
+    if cv is not None:
+        assert cv > 1, u'Fold number for crossvalidation is too small!'
     ngram = args.ngram
     assert ngram > 1, u'Maximal N-gram size is too small!'
     pmass = args.pmass
@@ -80,52 +84,60 @@ def main():
     model_dir = os.path.join(os.path.dirname(__file__), 'model')
     random.seed(args.seed)
     words_and_transcriptions = load_lexicon(training_vocabulary_name)
-    folds = split_words_and_transcriptions_for_cv(words_and_transcriptions, cv)
-    WERs = list()
-    PERs = list()
-    for cur_fold in folds:
-        tmp_file_for_training = create_tmp_file_name()
-        tmp_file_for_testing = create_tmp_file_name()
-        tmp_file_for_wordlist = create_tmp_file_name()
-        tmp_file_for_result = create_tmp_file_name()
-        try:
-            with codecs.open(tmp_file_for_training, mode='w', encoding='utf-8', errors='ignore') as fp:
-                for cur in cur_fold[0]:
-                    fp.write(cur)
-            with codecs.open(tmp_file_for_testing, mode='w', encoding='utf-8', errors='ignore') as fp:
-                for cur in cur_fold[1]:
-                    fp.write(cur)
-            with codecs.open(tmp_file_for_wordlist, mode='w', encoding='utf-8', errors='ignore') as fp:
-                for cur in cur_fold[1]:
-                    fp.write(cur.split()[0]+ '\n')
-            cmd = u'phonetisaurus-train --lexicon "{0}" --dir_prefix "{1}" --model_prefix russian_g2p ' \
-                  u'--ngram_order {2} --seq2_del'.format(tmp_file_for_training, model_dir, ngram)
-            os.system(cmd)
-            cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" -p {2} -a > "{3}"'.format(
-                os.path.join(model_dir, 'russian_g2p.fst'), tmp_file_for_wordlist, pmass, tmp_file_for_result
-            )
-            os.system(cmd)
-            word_error_rate, phone_error_rate = compare_lexicons(tmp_file_for_testing, tmp_file_for_result)
-            WERs.append(word_error_rate)
-            PERs.append(phone_error_rate)
-        finally:
-            if os.path.isfile(tmp_file_for_training):
-                os.remove(tmp_file_for_training)
-            if os.path.isfile(tmp_file_for_testing):
-                os.remove(tmp_file_for_testing)
-            if os.path.isfile(tmp_file_for_wordlist):
-                os.remove(tmp_file_for_wordlist)
-            if os.path.isfile(tmp_file_for_result):
-                os.remove(tmp_file_for_result)
-            for cur in filter(lambda it: it.startswith(u'russian_g2p'), os.listdir(model_dir)):
-                os.remove(os.path.join(model_dir, cur))
-    WERs = np.array(WERs, dtype=np.float64)
-    PERs = np.array(PERs, dtype=np.float64)
-    print(u'')
-    print(u'Word error rate is {0:.2%} +- {1:.2%}'.format(WERs.mean(), WERs.std()))
-    print(u'Phone error rate is {0:.2%} +- {1:.2%}'.format(PERs.mean(), PERs.std()))
-    print(u'')
-    print(u'Crossvalidation is finised...')
+    if cv is not None:
+        folds = split_words_and_transcriptions_for_cv(words_and_transcriptions, cv)
+        WERs = list()
+        PERs = list()
+        for cur_fold in folds:
+            tmp_file_for_training = create_tmp_file_name()
+            tmp_file_for_testing = create_tmp_file_name()
+            tmp_file_for_wordlist = create_tmp_file_name()
+            tmp_file_for_result = create_tmp_file_name()
+            try:
+                with codecs.open(tmp_file_for_training, mode='w',
+                                 encoding='utf-8', errors='ignore') as fp:
+                    for cur in cur_fold[0]:
+                        fp.write(cur)
+                with codecs.open(tmp_file_for_testing, mode='w',
+                                 encoding='utf-8', errors='ignore') as fp:
+                    for cur in cur_fold[1]:
+                        fp.write(cur)
+                with codecs.open(tmp_file_for_wordlist, mode='w',
+                                 encoding='utf-8', errors='ignore') as fp:
+                    for cur in cur_fold[1]:
+                        fp.write(cur.split()[0] + '\n')
+                cmd = u'phonetisaurus-train --lexicon "{0}" --dir_prefix "{1}" --model_prefix russian_g2p ' \
+                      u'--ngram_order {2} --seq2_del'.format(
+                    tmp_file_for_training, model_dir, ngram)
+                os.system(cmd)
+                cmd = u'phonetisaurus-apply --model "{0}" --word_list "{1}" -p {2} -a > "{3}"'.format(
+                    os.path.join(model_dir, 'russian_g2p.fst'),
+                    tmp_file_for_wordlist, pmass, tmp_file_for_result
+                )
+                os.system(cmd)
+                word_error_rate, phone_error_rate = compare_lexicons(
+                    tmp_file_for_testing, tmp_file_for_result)
+                WERs.append(word_error_rate)
+                PERs.append(phone_error_rate)
+            finally:
+                if os.path.isfile(tmp_file_for_training):
+                    os.remove(tmp_file_for_training)
+                if os.path.isfile(tmp_file_for_testing):
+                    os.remove(tmp_file_for_testing)
+                if os.path.isfile(tmp_file_for_wordlist):
+                    os.remove(tmp_file_for_wordlist)
+                if os.path.isfile(tmp_file_for_result):
+                    os.remove(tmp_file_for_result)
+                for cur in filter(lambda it: it.startswith(u'russian_g2p'),
+                                  os.listdir(model_dir)):
+                    os.remove(os.path.join(model_dir, cur))
+        WERs = np.array(WERs, dtype=np.float64)
+        PERs = np.array(PERs, dtype=np.float64)
+        print(u'')
+        print(u'Word error rate is {0:.2%} +- {1:.2%}'.format(WERs.mean(), WERs.std()))
+        print(u'Phone error rate is {0:.2%} +- {1:.2%}'.format(PERs.mean(), PERs.std()))
+        print(u'')
+        print(u'Crossvalidation is finised...')
 
     tmp_file_for_training = create_tmp_file_name()
     tmp_file_for_result = create_tmp_file_name()
